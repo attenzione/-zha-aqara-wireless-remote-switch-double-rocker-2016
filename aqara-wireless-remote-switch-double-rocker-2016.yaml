@@ -1,0 +1,62 @@
+---
+blueprint:
+  name: '[ZHA] Aqara Wireless Remote Switch (Double Rocker) (2016 version) (WXKG02LM)'
+  description: Automate your Xiaomi Aqara Wireless Remote Switch (Double Rocker) (2016 version) using ZHA events.
+  domain: automation
+  input:
+    aqara_switch:
+      name: Select the Aqara Wireless Remote Switch (Double Rocker)
+      description: Aqara Wireless Remote Switch (Double Rocker)
+      selector:
+        device:
+          integration: zha
+          manufacturer: LUMI
+          model: lumi.sensor_86sw2
+    button_press_left:
+      name: Press Left
+      description: Action to run on left button
+      default: []
+      selector:
+        action:
+    button_press_right:
+      name: Press Right
+      description: Action to run on right button
+      default: []
+      selector:
+        action:
+    button_press_both:
+      name: Press Both Buttons
+      description: Action to run on both buttons
+      default: []
+      selector:
+        action:
+
+mode: restart
+max_exceeded: silent
+trigger:
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input 'aqara_switch'
+action:
+  - variables:
+      attribute_name: '{{ trigger.event.data.args.attribute_name }}'
+      value: '{{ trigger.event.data.args.value }}'
+      command: '{{ trigger.event.data.command }}'
+      endpoint: '{{ trigger.event.data.endpoint_id }}'
+  - choose:
+      - conditions:
+          - '{{ attribute_name == ''on_off'' }}'
+          - '{{ value == ''Bool.true'' }}'
+          - '{{ endpoint == 1 }}'
+        sequence: !input 'button_press_left'
+      - conditions:
+          - '{{ attribute_name == ''on_off'' }}'
+          - '{{ value == ''Bool.true'' }}'
+          - '{{ endpoint == 2 }}'
+        sequence: !input 'button_press_right'
+      - conditions:
+          - '{{ attribute_name == ''on_off'' }}'
+          - '{{ value == ''Bool.true'' }}'
+          - '{{ endpoint == 3 }}'
+        sequence: !input 'button_press_both'
